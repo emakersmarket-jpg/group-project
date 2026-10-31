@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>수업용 학생 뽑기 룰렛</title>
+  <!-- 칠판 감성 폰트: 주아체, 나눔펜체, 고운돋움체 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+  <!-- 폭죽/빵빠레 효과를 위한 canvas-confetti 라이브러리 -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 칠판 테두리 프레임 -->
+  <div class="chalkboard-frame">
+    <div class="chalkboard">
+      
+      <!-- 칠판 상단 영역: 수업 타이틀 및 필수 구독/좋아요/알림설정 문구 -->
+      <header class="board-header">
+        <div class="chalk-badge left-chalk">
+          <span class="chalk-icon">🔔</span>
+          <span class="chalk-text">오늘의 수업 도우미 발표</span>
+        </div>
+        <h1 class="board-title">✨ 두근두근 학생 뽑기 룰렛 ✨</h1>
+        <div class="chalk-badge right-chalk">
+          <span class="chalk-text pulse-text">📢 구독 좋아요 해 주세요!</span>
+          <span class="sub-text">(좋아요 알림 설정 필수 💖)</span>
+        </div>
+      </header>
+
+      <!-- 메인 컨텐츠 영역: 룰렛과 조작부 -->
+      <main class="main-content">
+        <!-- 룰렛 컨테이너 -->
+        <div class="roulette-container">
+          <!-- 상단 포인터 바늘 -->
+          <div class="roulette-pointer">
+            <div class="pointer-arrow"></div>
+          </div>
+          <!-- 원판 캔버스 -->
+          <canvas id="rouletteCanvas" width="520" height="520"></canvas>
+          <!-- 중앙 축 장식 -->
+          <div class="center-pin">
+            <span>START</span>
+          </div>
+        </div>
+
+        <!-- 룰렛 아래 메인 조작부 -->
+        <div class="action-section">
+          <button id="spinBtn" class="spin-btn">
+            <span class="btn-icon">🎯</span>
+            <span class="btn-text">룰렛 돌리기!</span>
+          </button>
+
+          <!-- 서브 버튼: 랜덤 10명 배정 & 명단 직접 편집 -->
+          <div class="sub-actions">
+            <button id="randomAssignBtn" class="chalk-btn" title="전체 학생 중 10명을 무작위로 뽑아 룰렛에 배정합니다">
+              🎲 학생 명단 랜덤 배정 (10명)
+            </button>
+            <button id="openEditModalBtn" class="chalk-btn" title="학생 명단을 직접 입력하거나 수정합니다">
+              ✏️ 명단 직접 수정
+            </button>
+            <button id="soundToggleBtn" class="chalk-btn icon-only" title="효과음 켜기/끄기">
+              🔊 소리 ON
+            </button>
+          </div>
+        </div>
+      </main>
+
+      <!-- 칠판 하단 분필 받침대 및 안내 문구 -->
+      <footer class="board-footer">
+        <div class="chalk-duster-area">
+          <div class="chalk-piece chalk-white"></div>
+          <div class="chalk-piece chalk-yellow"></div>
+          <div class="chalk-piece chalk-pink"></div>
+          <div class="chalk-eraser">
+            <span class="eraser-label">칠판지우개</span>
+          </div>
+        </div>
+        <div class="footer-notice">
+          <span>선생님 말씀: 집중하고 다음 발표자가 누군지 기대해 보세요! | <strong>좋아요 알림 설정</strong> 잊지 마세요!</span>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- 당첨자 축하 모달 (빵빠레 & 팝업) -->
+  <div id="winnerModal" class="modal-overlay hidden">
+    <div class="modal-card fanfare-card">
+      <div class="fanfare-decorations">
+        <span class="fanfare-icon left">🎺</span>
+        <span class="fanfare-icon right">🎉</span>
+      </div>
+      <h2 class="modal-title">🎊 축하합니다! 🎊</h2>
+      <p class="modal-subtitle">오늘의 주인공으로 당첨되었습니다!</p>
+      <div class="winner-display">
+        <span id="winnerName" class="winner-name">홍길동</span>
+      </div>
+      <p class="winner-quote">"구독 좋아요 해 주세요! 좋아요 알림 설정도 함께해요~ 👏"</p>
+      <div class="modal-buttons">
+        <button id="closeModalBtn" class="modal-btn confirm">확인 완료</button>
+        <button id="spinAgainBtn" class="modal-btn secondary">한 번 더 돌리기 🎲</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 명단 편집 모달 -->
+  <div id="editModal" class="modal-overlay hidden">
+    <div class="modal-card edit-card">
+      <h2 class="modal-title">✏️ 학생 명단 수정</h2>
+      <p class="modal-desc">한 줄에 한 명씩 또는 쉼표(,)로 학생 이름을 입력해 주세요.</p>
+      <textarea id="studentTextarea" rows="8" placeholder="김민준&#10;이서연&#10;박지우&#10;최도윤&#10;정하은"></textarea>
+      <div class="edit-modal-footer">
+        <span id="studentCountBadge" class="count-badge">현재 0명</span>
+        <div class="modal-buttons-right">
+          <button id="cancelEditBtn" class="modal-btn cancel">취소</button>
+          <button id="saveEditBtn" class="modal-btn confirm">룰렛에 적용하기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
